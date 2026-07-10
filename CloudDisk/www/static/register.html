@@ -1,0 +1,94 @@
+
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用户注册 - Modern App</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1>创建账户</h1>
+      <p>加入我们的社区，开始您的旅程</p>
+    </div>
+
+    <div id="alert-box" class="alert"></div>
+
+    <form id="signup-form">
+      <div class="form-group">
+        <label for="username" class="form-label">用户名</label>
+        <input type="text" id="username" class="form-input" placeholder="请输入用户名" required>
+      </div>
+
+      <div class="form-group">
+        <label for="password" class="form-label">密码</label>
+        <input type="password" id="password" class="form-input" placeholder="请输入密码" required>
+      </div>
+
+      <div class="form-group">
+        <label for="confirm" class="form-label">确认密码</label>
+        <input type="password" id="confirm" class="form-input" placeholder="请再次输入密码" required>
+      </div>
+
+      <button type="submit" id="submit-btn" class="btn">立即注册</button>
+    </form>
+
+    <div class="auth-footer">
+      已有账户？<a href="/static/login.html">立即登录</a>
+    </div>
+  </div>
+
+  <script type="module">
+    import { authApi } from './api.js';
+
+    const signupForm = document.getElementById('signup-form');
+    const alertBox = document.getElementById('alert-box');
+    const submitBtn = document.getElementById('submit-btn');
+
+    function showAlert(message, isError = true) {
+      alertBox.textContent = message;
+      alertBox.className = `alert ${isError ? 'alert-error' : 'alert-success'}`;
+      alertBox.style.display = 'block';
+    }
+
+    signupForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+      const confirm = document.getElementById('confirm').value;
+
+      // Basic validation
+      if (password !== confirm) {
+        showAlert('两次输入的密码不一致');
+        return;
+      }
+
+      // Prepare request data
+      const data = { username, password, confirm };
+
+      // Disable button and clear alert
+      submitBtn.disabled = true;
+      alertBox.style.display = 'none';
+
+      try {
+        const response = await authApi.register(data);
+        
+        if (response.status === 'success') {
+          showAlert(response.message || '注册成功！正在跳转至登录页面...', false);
+          
+          // Redirect after 2 seconds
+          setTimeout(() => {
+            window.location.href = '/static/login.html';
+          }, 2000);
+        }
+      } catch (error) {
+        showAlert(error.message || '注册失败，请稍后重试');
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

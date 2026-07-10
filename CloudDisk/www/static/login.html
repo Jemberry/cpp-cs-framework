@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>用户登录 - Modern App</title>
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+
+<body>
+  <div class="auth-card">
+    <div class="auth-header">
+      <h1>欢迎回来</h1>
+    </div>
+
+    <div id="alert-box" class="alert"></div>
+
+    <form id="signin-form">
+      <div class="form-group">
+        <label for="username" class="form-label">用户名</label>
+        <input type="text" id="username" class="form-input" placeholder="请输入用户名" required>
+      </div>
+
+      <div class="form-group">
+        <label for="password" class="form-label">密码</label>
+        <input type="password" id="password" class="form-input" placeholder="请输入密码" required>
+      </div>
+
+      <button type="submit" id="submit-btn" class="btn">登录</button>
+    </form>
+
+    <div class="auth-footer">
+      还没有账户？<a href="/static/register.html">立即注册</a>
+    </div>
+  </div>
+
+  <script type="module">
+    import {authApi} from './api.js';
+
+    const signinForm = document.getElementById('signin-form');
+    const alertBox = document.getElementById('alert-box');
+    const submitBtn = document.getElementById('submit-btn');
+
+    function showAlert(message, isError = true) {
+      alertBox.textContent = message;
+      alertBox.className = `alert ${isError ? 'alert-error' : 'alert-success'}`;
+      alertBox.style.display = 'block';
+    }
+
+    signinForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const username = document.getElementById('username').value;
+      const password = document.getElementById('password').value;
+
+      // Prepare request data
+      const data = {username, password};
+
+      // Disable button and clear alert
+      submitBtn.disabled = true;
+      alertBox.style.display = 'none';
+
+      try {
+        const response = await authApi.login(data);
+
+        if (response.status === 'success') {
+          // Store token and user data
+          localStorage.setItem('accessToken', response.data.accessToken);
+          localStorage.setItem('tokenType', response.data.tokenType);
+          localStorage.setItem('username', response.data.user.username);
+
+          showAlert('登录成功！正在进入系统...', false);
+
+          // Redirect after 1 seconds
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 1000);
+        }
+      } catch (error) {
+        showAlert(error.message || '登录失败，请检查您的用户名或密码');
+        submitBtn.disabled = false;
+      }
+    });
+  </script>
+</body>
+
+</html>
